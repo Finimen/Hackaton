@@ -1,0 +1,136 @@
+version: '3.8'
+
+services:
+  # PostgreSQL база данных
+  postgres:
+    image: postgres:15-alpine
+    container_name: netscan-postgres
+    environment:
+      POSTGRES_DB: netscan
+      POSTGRES_USER: netscan
+      POSTGRES_PASSWORD: netscan
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deployments/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - netscan-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U netscan"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis для очереди задач
+  redis:
+    image: redis:8-alpine
+    container_name: netscan-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - netscan-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Backend API сервер
+  backend:
+    build:
+      context: .
+      dockerfile: deployments/backend/Dockerfile
+    container_name: netscan-backend
+    environment:
+      netscan_SERVER_PORT: 8080
+      netscan_SERVER_MODE: release
+      netscan_DB_HOST: postgres
+      netscan_DB_PORT: 5432
+      netscan_DB_USER: netscan
+      netscan_DB_PASSWORD: netscan
+      netscan_DB_NAME: netscan
+      netscan_DB_SSLMODE: disable
+      netscan_REDIS_ADDR: redis:6379
+      netscan_REDIS_PASSWORD: ""
+      netscan_REDIS_DB: 0
+      netscan_LOG_LEVEL: info
+      netscan_LOG_FORMAT: json
+      netscan_AGENT_TOKEN_SECRET: your-production-secret-change-this
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - netscan-network
+    restart: unless-stopped
+
+  # Агент для проверок (можно запустить несколько с разными локациями)
+  agent-usa:
+    build:
+      context: .
+      dockerfile: deployments/agent/Dockerfile
+    container_name: netscan-agent-usa
+    environment:
+      netscan_AGENT_NAME: "usa-east-1"
+      netscan_AGENT_LOCATION: "USA"
+      netscan_AGENT_BACKEND_URL: "http://backend:8080"
+      netscan_AGENT_TOKEN: "agent-registration-token"
+      netscan_AGENT_CAPABILITIES: "http,https,ping,tcp,dns"
+      netscan_AGENT_HTTP_TIMEOUT: 30
+      netscan_AGENT_PING_TIMEOUT: 10
+      netscan_AGENT_TCP_TIMEOUT: 15
+      netscan_AGENT_DNS_TIMEOUT: 5
+      netscan_AGENT_MAX_CONCURRENT_CHECKS: 5
+      netscan_AGENT_POLL_INTERVAL: 5
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - netscan-network
+    restart: unless-stopped
+
+  agent-germany:
+    build:
+      context: .
+      dockerfile: deployments/agent/Dockerfile
+    container_name: netscan-agent-germany
+    environment:
+      netscan_AGENT_NAME: "germany-frankfurt"
+      netscan_AGENT_LOCATION: "Germany"
+      netscan_AGENT_BACKEND_URL: "http://backend:8080"
+      netscan_AGENT_TOKEN: "agent-registration-token"
+      netscan_AGENT_CAPABILITIES: "http,https,ping,tcp,dns"
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - netscan-network
+    restart: unless-stopped
+
+  # Frontend (опционально - если будем делать)
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: netscan-frontend
+  #   ports:
+  #     - "3000:80"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - netscan-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  netscan-network:
+    driver: bridge

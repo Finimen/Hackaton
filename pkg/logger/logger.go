@@ -33,7 +33,6 @@ func Setup(cfg Config) *slog.Logger {
 	}
 
 	logger := slog.New(handler)
-	slog.SetDefault(logger)
 
 	return logger
 }

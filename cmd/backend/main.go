@@ -1,27 +1,47 @@
 package main
 
 import (
+	"NetScan/internal/backend/storage"
 	"NetScan/internal/config"
 	"NetScan/pkg/logger"
+	"log"
 	"log/slog"
+	"os"
 )
 
 func main() {
 	// Загрузка конфигурации
 	cfg, err := config.Load()
 	if err != nil {
-		slog.Error("failed to load config:", err)
+		log.Fatalf("failed to load config %s", err)
 	}
 
 	// Настройка логирования
-	logger.Setup(logger.Config{
+	log := logger.Setup(logger.Config{
 		Level:  cfg.Logging.Level,
 		Format: cfg.Logging.Format,
 	})
 
-	slog.Info("Starting NetScan backend",
+	log.Info("Starting NetScan backend",
+		slog.String("Name", cfg.App.Name),
 		slog.String("version", cfg.App.Version),
 		slog.Int("port", cfg.Server.Port),
 	)
 
+	// Подключение к БД
+	db, err := storage.NewPostgres(&cfg.Database, log)
+	if err != nil {
+		log.Error("failed to connect to database", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	// Подключение к Redis Queue
+	redisQueue, err := storage.NewRedisQueue(&cfg.Redis, log)
+	if err != nil {
+		log.Error("failed to connect to redis queue", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	_ = redisQueue
 }

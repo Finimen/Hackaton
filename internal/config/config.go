@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 )
 
@@ -34,7 +35,7 @@ type DatabaseConfig struct {
 
 type RedisConfig struct {
 	Addr     string `mapstructure:"addr"`
-	Password int    `mapstructure:"password"`
+	Password string `mapstructure:"password"`
 	DB       int    `mapstructure:"db"`
 }
 
@@ -56,7 +57,7 @@ type AppConfig struct {
 func Load() (*Config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("config")
+	viper.AddConfigPath("configs")
 
 	setDefaults()
 
@@ -144,10 +145,11 @@ func (d *DatabaseConfig) GetDNS() string {
 }
 
 // возвращает настройки для Redis клиента
-func (r *RedisConfig) GetRedisOptions() map[string]interface{} {
-	return map[string]interface{}{
-		"addr":     r.Addr,
-		"password": r.Password,
-		"db":       r.DB,
+func (r *RedisConfig) GetRedisOptions() *redis.Options {
+	return &redis.Options{
+		Addr:            r.Addr,
+		Password:        r.Password,
+		DB:              r.DB,
+		DisableIdentity: true,
 	}
 }
