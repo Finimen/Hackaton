@@ -1,0 +1,24 @@
+server:
+  port: 8080
+  mode: "debug"
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "checkmesh"
+  password: "checkmesh"
+  dbname: "checkmesh"
+  sslmode: "disable"
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+
+logging:
+  level: "info"
+  format: "text"
+
+security:
+  agent_token_secret: "secret_key"
+  token_expiry: "720h"
