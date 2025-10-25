@@ -45,7 +45,7 @@ func run() error {
 		return fmt.Errorf("failed to init agent metadata: %w", err)
 	}
 
-	// Создание агента
+	// Creation of the test agent
 	agent := domain.NewAgent(
 		getEnv("AGENT_NAME", "net-scan-agent"),
 		getEnv("AGENT_LOCATION", "unknown"),
@@ -53,7 +53,7 @@ func run() error {
 	)
 	agent.UpdateMetadata(agentMetadata)
 
-	// Регистрация агента
+	// Registration of the agent
 	baseURL := getEnv("BACKEND_URL", "http://localhost:8080")
 	apiClient := client.NewAPIClient(baseURL, "", "")
 

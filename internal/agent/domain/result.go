@@ -37,8 +37,8 @@ type DNSResult struct {
 }
 
 type TCPResult struct {
-	PortOpen     bool    `json:"port_open"`
-	ConntentTime float64 `json:"conntent_time"`
+	PortOpen    bool    `json:"port_open"`
+	ConnectTime float64 `json:"connect_time"`
 }
 
 type SSLInfo struct {

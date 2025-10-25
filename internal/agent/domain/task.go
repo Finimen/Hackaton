@@ -28,12 +28,12 @@ const (
 )
 
 type Task struct {
-	ID        string                 `json:id`
-	Type      CheckType              `json:type`
-	Target    string                 `json:target`
-	Options   map[string]interface{} `json:options`
-	CreatedAt time.Time              `json:created_at`
-	AgentID   string                 `json:agent_id`
+	ID        string                 `json:"id"`
+	Type      CheckType              `json:"type"`
+	Target    string                 `json:"target"`
+	Options   map[string]interface{} `json:"options"`
+	CreatedAt time.Time              `json:"created_at"`
+	AgentID   string                 `json:"agent_id"`
 }
 
 func NewHTTPTask(target string, timeout int) *Task {

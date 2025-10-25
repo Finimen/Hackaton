@@ -35,7 +35,7 @@ func (s *AgentHandler) Run(ctx context.Context) {
 			s.logger.Info("Stopping agent handler due to context cancellation")
 			return
 		default:
-			task, err := s.api.FetchTask(context.Background())
+			task, err := s.api.FetchTask(ctx)
 			if err != nil {
 				if errors.Is(err, client.ErrNoTasks) {
 					s.logger.Info("no tasks")
@@ -48,7 +48,7 @@ func (s *AgentHandler) Run(ctx context.Context) {
 				continue
 			}
 
-			result := s.runner.ExecuteTask(context.Background(), task)
+			result := s.runner.ExecuteTask(ctx, task)
 
 			if err := s.api.SubmitResult(context.Background(), result); err != nil {
 				s.logger.Error("Failed to sumbit", "error", err)
