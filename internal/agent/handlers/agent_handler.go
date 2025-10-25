@@ -43,14 +43,14 @@ func (s *AgentHandler) Run(ctx context.Context) {
 					continue
 				}
 
-				s.logger.Error("Failed", err)
+				s.logger.Error("Failed to fetch task", "error", err)
 				time.Sleep(ERROR_DELAY)
 				continue
 			}
 
 			result := s.runner.ExecuteTask(ctx, task)
 
-			if err := s.api.SubmitResult(context.Background(), result); err != nil {
+			if err := s.api.SubmitResult(ctx, result); err != nil {
 				s.logger.Error("Failed to sumbit", "error", err)
 			}
 		}

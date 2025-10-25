@@ -33,6 +33,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	logger.Info("Agent is running, waiting for shutdown signal...")
+
+	<-shutdownCtx.Done()
+
 	stop()
 }
 

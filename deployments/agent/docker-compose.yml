@@ -1,0 +1,29 @@
+# deployments/agent/docker-compose.agent.yml
+version: '3.8'
+
+services:
+  agent:
+    build:
+      context: ../..
+      dockerfile: deployments/agent/Dockerfile
+    container_name: netscan-agent-${AGENT_NAME:-custom}
+    environment:
+      # Обязательные настройки
+      netscan_AGENT_NAME: "${AGENT_NAME:-unknown}"
+      netscan_AGENT_LOCATION: "${AGENT_LOCATION:-unknown}"
+      netscan_AGENT_BACKEND_URL: "${BACKEND_URL:-http://localhost:8080}"
+
+      # Опциональные настройки
+      netscan_AGENT_TOKEN: "${AGENT_TOKEN:-}" # для существующих агентов
+      netscan_AGENT_CAPABILITIES: "${CAPABILITIES:-http,https,ping,tcp,dns}"
+      netscan_AGENT_HTTP_TIMEOUT: "${HTTP_TIMEOUT:-30}"
+      netscan_AGENT_PING_TIMEOUT: "${PING_TIMEOUT:-10}"
+      netscan_AGENT_TCP_TIMEOUT: "${TCP_TIMEOUT:-15}"
+      netscan_AGENT_DNS_TIMEOUT: "${DNS_TIMEOUT:-5}"
+      netscan_AGENT_MAX_CONCURRENT_CHECKS: "${MAX_CONCURRENT:-5}"
+      netscan_AGENT_POLL_INTERVAL: "${POLL_INTERVAL:-5}"
+
+      # Настройки логирования
+      netscan_LOG_LEVEL: "${LOG_LEVEL:-info}"
+    restart: unless-stopped
+    network_mode: "host" # Чтобы агент имел доступ к локальной сети

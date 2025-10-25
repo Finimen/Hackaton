@@ -91,7 +91,7 @@ func (a *APIClient) FetchTask(ctx context.Context) (*domain.Task, error) {
 }
 
 func (a *APIClient) fetchTaskSingle(ctx context.Context) (*domain.Task, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", a.baseURL+"/api/agents/tasks", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", a.baseURL+"/api/v1/agents/tasks/next", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -129,7 +129,8 @@ func (a *APIClient) SubmitResult(ctx context.Context, result *domain.Result) err
 			return fmt.Errorf("failed to marshal result: %w", err)
 		}
 
-		req, err := http.NewRequestWithContext(ctx, "POST", a.baseURL+"/api/agents/results", bytes.NewReader(body))
+		url := fmt.Sprintf("%s/api/v1/results/%s", a.baseURL, result.TaskID)
+		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
 		if err != nil {
 			return fmt.Errorf("failed to create request: %w", err)
 		}
@@ -202,7 +203,7 @@ func (a *APIClient) registerAgentSingle(ctx context.Context, agent *domain.Agent
 		return fmt.Errorf("failed to marshal agent: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", a.baseURL+"/api/agents/register", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, "POST", a.baseURL+"/api/v1/agents/register", bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -238,7 +239,7 @@ func (a *APIClient) SendHeartbeat(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, "POST", a.baseURL+"/api/agents/heartbeat", nil)
+	req, err := http.NewRequestWithContext(ctx, "POST", a.baseURL+"/api/v1/agents/heartbeat", nil)
 	if err != nil {
 		return fmt.Errorf("failed to create heartbeat request: %w", err)
 	}
