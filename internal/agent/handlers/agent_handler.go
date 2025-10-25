@@ -3,16 +3,15 @@ package handler
 import (
 	client "NetScan/internal/agent/clients"
 	clients "NetScan/internal/agent/clients"
-	runner "NetScan/internal/agent/runners"
 	"context"
 	"errors"
 	"log/slog"
 	"time"
 )
 
-type AgentService struct {
-	client *clients.APIClient
-	runner *runner.TaskRunner
+type AgentHandler struct {
+	api    *clients.APIClient
+	runner *TaskHandler
 	logger *slog.Logger
 }
 
@@ -21,9 +20,17 @@ const (
 	ERROR_DELAY = time.Second * 5
 )
 
-func (s *AgentService) Run() {
+func NewAgentHandler(logger *slog.Logger, clients *clients.APIClient, runner *TaskHandler) *AgentHandler {
+	return &AgentHandler{
+		api:    clients,
+		runner: runner,
+		logger: logger,
+	}
+}
+
+func (s *AgentHandler) Run() {
 	for {
-		task, err := s.client.FetchTask(context.Background())
+		task, err := s.api.FetchTask(context.Background())
 		if err != nil {
 			if errors.Is(err, client.ErrNoTasks) {
 				s.logger.Info("no tasks")
@@ -36,9 +43,9 @@ func (s *AgentService) Run() {
 			continue
 		}
 
-		result := s.runner.Execute(task)
+		result := s.runner.ExecuteTask(context.Background(), task)
 
-		if err := s.client.SumbitResult(context.Background(), result); err != nil {
+		if err := s.api.SumbitResult(context.Background(), result); err != nil {
 			s.logger.Error("Failed to sumbit", "error", err)
 		}
 	}

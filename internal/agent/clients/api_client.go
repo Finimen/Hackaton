@@ -1,17 +1,20 @@
 package client
 
 import (
-	runner "NetScan/internal/agent/runners"
+	domain "NetScan/internal/agent/domain"
 	"context"
 )
 
 type APIClient struct {
 }
 
-func (a *APIClient) FetchTask(ctx context.Context) (*runner.Task, error) {
+// From Backend to Agent
+func (a *APIClient) FetchTask(ctx context.Context) (*domain.Task, error) {
+
 	return nil, nil
 }
 
-func (a *APIClient) SumbitResult(ctx context.Context, result *interface{}) error {
+// From Agent to Backend
+func (a *APIClient) SumbitResult(ctx context.Context, result *domain.Result) error {
 	return nil
 }
