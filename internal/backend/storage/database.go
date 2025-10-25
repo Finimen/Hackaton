@@ -2,27 +2,42 @@ package storage
 
 import (
 	"NetScan/internal/config"
-	"database/sql"
+	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func NewPostgres(cfg *config.DatabaseConfig, log *slog.Logger) (*sql.DB, error) {
+func NewPostgres(ctx context.Context, cfg *config.DatabaseConfig, log *slog.Logger) (*pgxpool.Pool, error) {
 	connStr := cfg.GetDNS()
 
-	db, err := sql.Open("pgx", connStr)
+	config, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
-		log.Error("Failed to open connection to postgres")
-		return nil, fmt.Errorf("failed to open postgres database: %w", err)
+		return nil, fmt.Errorf("failed to parse connection string: %w", err)
 	}
 
-	if err = db.Ping(); err != nil {
-		log.Error("Failed to ping database")
-		return nil, fmt.Errorf("failed to ping postgres database: %w", err)
+	// Настройка пула
+	config.MaxConns = 10
+	config.MinConns = 2
+	config.MaxConnLifetime = time.Hour
+	config.MaxConnIdleTime = 30 * time.Minute
+
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create connection pool: %w", err)
 	}
 
-	log.Info("Successfully connected to postgres database")
-	return db, nil
+	// Проверяем подключение с контекстом и таймаутом
+	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := pool.Ping(pingCtx); err != nil {
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	slog.Info("Connected to PostgreSQL with pgx", "host", cfg.Host, "db", cfg.DBName)
+	return pool, nil
 }

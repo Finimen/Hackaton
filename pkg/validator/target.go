@@ -28,17 +28,3 @@ func ValidateTarget(target string) bool {
 
 	return false
 }
-
-func ValidateCheckType(checkType string) bool {
-	validTypes := map[string]bool{
-		"http":       true,
-		"https":      true,
-		"ping":       true,
-		"tcp":        true,
-		"dns":        true,
-		"traceroute": true,
-	}
-
-	// Если не входит в validTypes вернет false
-	return validTypes[checkType]
-}

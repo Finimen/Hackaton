@@ -4,9 +4,11 @@ import (
 	"NetScan/internal/backend/storage"
 	"NetScan/internal/config"
 	"NetScan/pkg/logger"
+	"context"
 	"log"
 	"log/slog"
 	"os"
+	"time"
 )
 
 func main() {
@@ -28,8 +30,11 @@ func main() {
 		slog.Int("port", cfg.Server.Port),
 	)
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	
 	// Подключение к БД
-	db, err := storage.NewPostgres(&cfg.Database, log)
+	db, err := storage.NewPostgres(ctx, &cfg.Database, log)
 	if err != nil {
 		log.Error("failed to connect to database", slog.String("error", err.Error()))
 		os.Exit(1)

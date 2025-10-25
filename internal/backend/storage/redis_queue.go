@@ -12,11 +12,11 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type RedisQueue struct {
+type redisQueue struct {
 	client *redis.Client
 }
 
-func NewRedisQueue(cfg *config.RedisConfig, log *slog.Logger) (*RedisQueue, error) {
+func NewRedisQueue(cfg *config.RedisConfig, log *slog.Logger) (Queue, error) {
 	client := redis.NewClient(cfg.GetRedisOptions())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -28,11 +28,11 @@ func NewRedisQueue(cfg *config.RedisConfig, log *slog.Logger) (*RedisQueue, erro
 	}
 
 	log.Info("Connected to Redis")
-	return &RedisQueue{client: client}, nil
+	return &redisQueue{client: client}, nil
 }
 
 // Добавляем элемент в очередь
-func (r *RedisQueue) PushTask(ctx context.Context, queueName string, task interface{}) error {
+func (r *redisQueue) PushTask(ctx context.Context, queueName string, task interface{}) error {
 	data, err := json.Marshal(task)
 	if err != nil {
 		return fmt.Errorf("failed to marshal the task: %w", err)
@@ -42,7 +42,7 @@ func (r *RedisQueue) PushTask(ctx context.Context, queueName string, task interf
 }
 
 // Удаляем элемент из очереди
-func (r *RedisQueue) PopTask(ctx context.Context, queueName string, timeout time.Duration) (interface{}, error) {
+func (r *redisQueue) PopTask(ctx context.Context, queueName string, timeout time.Duration) ([]byte, error) {
 	result, err := r.client.BRPop(ctx, time.Second, queueName).Result()
 
 	if err != nil {
@@ -65,4 +65,20 @@ func (r *RedisQueue) PopTask(ctx context.Context, queueName string, timeout time
 	}
 
 	return []byte(result[1]), nil
+}
+
+func (r *redisQueue) Close() error {
+	return r.client.Close()
+}
+
+func (r *redisQueue) GetQueueLength(ctx context.Context, queueName string) (int64, error) {
+	return r.client.LLen(ctx, queueName).Result()
+}
+
+func (r *redisQueue) Publish(ctx context.Context, channel string, message interface{}) error {
+	data, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+	return r.client.Publish(ctx, channel, data).Err()
 }

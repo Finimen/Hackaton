@@ -8,18 +8,20 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type CheckStore struct {
-	db *sql.DB
+type checkStore struct {
+	pool *pgxpool.Pool
 }
 
-func NewCheckStore(db *sql.DB) *CheckStore {
-	return &CheckStore{db: db}
+func NewCheckStore(pool *pgxpool.Pool) CheckStore {
+	return &checkStore{pool: pool}
 }
 
 // Создаем новую проверку
-func (s *CheckStore) Create(ctx context.Context, check *models.Check) error {
+func (s *checkStore) Create(ctx context.Context, check *models.Check) error {
 	check.ID = uuidutil.New()
 	check.CreatedAt = time.Now()
 	check.UpdatedAt = time.Now()
@@ -27,7 +29,7 @@ func (s *CheckStore) Create(ctx context.Context, check *models.Check) error {
 	query := `INSERT INTO checks (id, type, target, status, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)`
 
-	_, err := s.db.ExecContext(ctx, query,
+	_, err := s.pool.Exec(ctx, query,
 		check.ID,
 		check.Type,
 		check.Target,
@@ -40,12 +42,12 @@ func (s *CheckStore) Create(ctx context.Context, check *models.Check) error {
 }
 
 // Возвращает по ID
-func (s *CheckStore) GetByID(ctx context.Context, id string) (*models.Check, error) {
+func (s *checkStore) GetByID(ctx context.Context, id string) (*models.Check, error) {
 	query := `SELECT id, type, target, status, created_at, updated_at
 		FROM checks WHERE id = $1`
 
 	var check models.Check
-	err := s.db.QueryRowContext(ctx, query, id).Scan(
+	err := s.pool.QueryRow(ctx, query, id).Scan(
 		&check.ID,
 		&check.Type,
 		&check.Target,
@@ -62,21 +64,21 @@ func (s *CheckStore) GetByID(ctx context.Context, id string) (*models.Check, err
 }
 
 // Обновляет статус проверки
-func (s *CheckStore) UpdateStatus(ctx context.Context, id string, status models.CheckStatus) error {
+func (s *checkStore) UpdateStatus(ctx context.Context, id string, status models.CheckStatus) error {
 	query := `UPDATE checks SET status = $1, updated_at = $2 WHERE id = $3`
-	_, err := s.db.ExecContext(ctx, query, status, time.Now(), id)
+	_, err := s.pool.Exec(ctx, query, status, time.Now(), id)
 	return err
 }
 
 // Возвращаем список проверок
-func (s *CheckStore) List(ctx context.Context, limit, offset int) ([]*models.Check, error) {
+func (s *checkStore) List(ctx context.Context, limit, offset int) ([]*models.Check, error) {
 	query := `
 		SELECT id, type, target, status, created_at, updated_at
 		FROM checks 
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
 	`
-	rows, err := s.db.QueryContext(ctx, query, limit, offset)
+	rows, err := s.pool.Query(ctx, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("list checks: failed to query checks (limit=%d, offset=%d): %w", limit, offset, err)
 	}
