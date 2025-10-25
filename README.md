@@ -6,15 +6,17 @@
 ![Version](https://img.shields.io/badge/Version-0.1.6B-blue)
 ![Platform](https://img.shields.io/badge/Platform-Web-informational)
 
+A solution that will make checking "Why a website isn't loading" a snap.
+
 </div>
 
 ### The Eliminaters
-**Сапсай К.В.** - 📧 finimensniper@gmail.com
-<p>Created the agent features (core) part of the project</p>
-**Печерикин Д.Д** - pecherikindanielman@mail.ru
-<p>Created the backend part of the project</p>
-**Карпенко Д.В. - Yahooilla@yandex.ru
-<p>Created the frontend part of the project</p>
+#### **Сапсай К.В.** - 📧 finimensniper@gmail.com
+- Created the agent features (core) part of the project
+#### **Печерикин Д.Д** - pecherikindanielman@mail.ru
+- Created the backend part of the project
+#### **Карпенко Д.В. - Yahooilla@yandex.ru
+- Created the frontend part of the project
 
 
 ## 🚀 Features
