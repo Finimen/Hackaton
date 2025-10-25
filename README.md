@@ -1,86 +1,117 @@
+<div align="center">
+# CheckMesh - Site "Checker" Platform 🔊
 
-# CheckMesh - Архитектура проекта
+![Status](https://img.shields.io/badge/Status-Active-success)
+![License](https://img.shields.io/badge/License-Proprietary-red)
+![Version](https://img.shields.io/badge/Version-0.1.6B-blue)
+![Platform](https://img.shields.io/badge/Platform-Web-informational)
 
-## 🏗️ Общая архитектура
+</div>
 
-
-
-## 📁 Структура проекта
-
-- **Hackaton/**
-    - **cmd/** — точки входа приложений
-        - **backend/** — запуск API сервера
-            - `main.go`
-        - **agent/** — запуск агента проверок
-            - `main.go`
-    - **internal/** — внутренняя логика приложения
-        - **backend/** — логика серверной части
-            - **handlers/** — HTTP и WebSocket обработчики
-                - `checks.go` — обработка проверок
-                - `agents.go` — управление агентами
-                - `websocket.go` — соединение в реальном времени
-            - **services/** — бизнес-логика
-                - `check_service.go`
-                - `agent_service.go`
-                - `queue_service.go`
-            - **storage/** — работа с базой данных и очередями
-                - `database.go`
-                - `check_store.go`
-                - `agent_store.go`
-                - `redis_queue.go`
-            - **models/** — структуры данных
-                - `check.go`
-                - `agent.go`
-                - `result.go`
-        - **agent/** — логика клиента-агента
-            - **worker/** — обработка задач
-                - `task_processor.go`
-                - `heartbeat.go`
-            - **checks/** — реализации проверок
-                - `http_check.go`
-                - `ping_check.go`
-                - `tcp_check.go`
-                - `dns_check.go`
-                - `traceroute.go`
-            - **client/** — клиент API
-                - `api_client.go`
-    - **pkg/** — общие утилиты
-        - **uuid/** — генерация UUID
-        - **validator/** — валидация данных
-        - **logger/** — логирование
-    - **frontend/** — веб-интерфейс (Vue.js)
-        - **src/**
-            - **components/**
-                - `CheckForm.vue`
-                - `ResultsMap.vue`
-                - `AgentsStatus.vue`
-            - **views/**
-                - `Dashboard.vue`
-                - `History.vue`
-            - **api/**
-                - `client.js`
-        - `package.json`
-    - **deployments/** — конфигурации развёртывания
-        - **backend/**
-            - `Dockerfile`
-            - `config.yaml`
-        - **agent/**
-            - `Dockerfile`
-            - `agent-config.yaml`
-        - **database/**
-            - `init.sql`
-    - **scripts/** — вспомогательные скрипты
-        - `setup-local.sh`
-        - `start-agents.sh`
-    - `go.mod`
-    - `docker-compose.yml`
-    - `README.md`
+### The Eliminaters
+**Сапсай К.В.** - 📧 finimensniper@gmail.com
+<p>Created the agent features (core) part of the project</p>
+**Печерикин Д.Д** - pecherikindanielman@mail.ru
+<p>Created the backend part of the project</p>
+**Карпенко Д.В. - Yahooilla@yandex.ru
+<p>Created the frontend part of the project</p>
 
 
+## 🚀 Features
+
+### Core Functionality
+- **HTTP Check**           - Avg timeout < 1s
+- **Ping Check**           - Avg timeout < 75ms, PL = 0%
+- **DNS Check**            - Avg timeout < 100ms
+- **TCP Check**            - Avg timeout < 100ms
+- **HTTPS with SSL Check** - Avg timeout < 200ms
+
+### Technical Features
+- **TODO** - TODO
+
+## 🛠 Tech Stack
+
+### Backend
+- **Go 1.21+** - Primary programming language
+- **Gin** - HTTP web framework
+- **PostgreSQL** - Primary database
+- **Redis** - Caching and token blacklisting
+- **Redis Pub/Sub** - Queue for connection backend part with agent one
+
+### Infrastructure
+- **Docker** - Containerization
+- **Viper** - Configuration management
+
+## 📁 Project Structure
+
+```
+soundtube/
+├── cmd/
+│   ├── agent/              # Entry point of agent part
+│   │   └── tests/
+│   └── backend/            # Entry point of backend part
+├── docs/                   
+├── internal/
+│   └── backend/ 
+│   │   ├── handlers/       # End points layer
+│   │   ├── services/       # Business logic layer
+│   │   ├── dependencies/   # DI implementation
+│   │   ├── models/         # Models layer
+│   │   ├── server/         # Server layer
+│   │   └── storage/        # Data access layer
+│   └── agent/
+│   │   ├── clients/        # API of the agent
+│   │   ├── domain/         # Business logic layer
+│   │   ├── handlers/       # Queue endpoints layer
+│   │   └── runners/        # Checks layer
+├── pkg/
+│   ├── config/             # Configuration management
+│   ├── middleware/         # HTTP middleware
+│   └── utils/              # Shared utilities
+├── configs/                # Configuration files
+├── scripts/                # Small features for app in general
+└── static/                 # Static files and uploads
+
+```
+
+---
+
+## 🔧 API Documentation
+
+### Authentication Endpoints
+<div align="center">
+
+# TODO
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register new user |
+| POST | `/api/auth/login` | User login |
+| POST | `/api/auth/logout` | User logout |
+| GET | `/api/auth/verify-email` | Verify email address |
+
+### Sounds Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/sounds` | Get all sounds |
+| POST | `/api/sounds` | Create sound record |
+| POST | `/api/sounds/upload` | Upload audio file |
+| PATCH | `/api/sounds/{id}` | Update sound |
+| DELETE | `/api/sounds/{id}` | Delete sound |
+
+### Reactions Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| PUT | `/api/sounds/{id}/reactions` | Add reaction to sound |
+| DELETE | `/api/sounds/{id}/reactions` | Remove reaction from sound |
+| GET | `/api/sounds/{id}/reactions` | Get sound reactions |
+
+</div>
 
 
-
-## 🎯 Ключевые компоненты
+## 🎯 Division into parts
 
 ### Backend (Go)
 - **HTTP Server** - REST API + WebSocket
@@ -112,13 +143,7 @@
 - **check_tasks** - очередь задач
 - **agent_heartbeats** - статусы агентов
 
+## 📝 License
 
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/Finimen/Soundtube/blob/main/License.md) file for details.
 
-## 🔧 Технологии
-
-- **Backend**: Go, Gorilla Mux, WebSocket
-- **Agent**: Go, стандартные сетевые библиотеки
-- **Frontend**: React/Vue, WebSocket
-- **Базы данных**: PostgreSQL, Redis
-- **Очередь**: Redis Pub/Sub
-- **Контейнеризация**: Docker
