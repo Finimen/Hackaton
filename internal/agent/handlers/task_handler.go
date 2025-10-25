@@ -13,6 +13,13 @@ type TaskHandler struct {
 	logger        *slog.Logger
 }
 
+func NewTaskHandler(runnerFactory *runner.Factory, logger *slog.Logger) *TaskHandler {
+	return &TaskHandler{
+		runnerFactory: runnerFactory,
+		logger:        logger,
+	}
+}
+
 func (t *TaskHandler) ExecuteTask(ctx context.Context, task *domain.Task) *domain.Result {
 	runner, err := t.runnerFactory.GetRunner(task.Type)
 	if err != nil {

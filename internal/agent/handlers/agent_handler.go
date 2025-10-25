@@ -28,25 +28,31 @@ func NewAgentHandler(logger *slog.Logger, clients *clients.APIClient, runner *Ta
 	}
 }
 
-func (s *AgentHandler) Run() {
+func (s *AgentHandler) Run(ctx context.Context) {
 	for {
-		task, err := s.api.FetchTask(context.Background())
-		if err != nil {
-			if errors.Is(err, client.ErrNoTasks) {
-				s.logger.Info("no tasks")
-				time.Sleep(IDLE_DELAY)
+		select {
+		case <-ctx.Done():
+			s.logger.Info("Stopping agent handler due to context cancellation")
+			return
+		default:
+			task, err := s.api.FetchTask(context.Background())
+			if err != nil {
+				if errors.Is(err, client.ErrNoTasks) {
+					s.logger.Info("no tasks")
+					time.Sleep(IDLE_DELAY)
+					continue
+				}
+
+				s.logger.Error("Failed", err)
+				time.Sleep(ERROR_DELAY)
 				continue
 			}
 
-			s.logger.Error("Failed", err)
-			time.Sleep(ERROR_DELAY)
-			continue
-		}
+			result := s.runner.ExecuteTask(context.Background(), task)
 
-		result := s.runner.ExecuteTask(context.Background(), task)
-
-		if err := s.api.SumbitResult(context.Background(), result); err != nil {
-			s.logger.Error("Failed to sumbit", "error", err)
+			if err := s.api.SubmitResult(context.Background(), result); err != nil {
+				s.logger.Error("Failed to sumbit", "error", err)
+			}
 		}
 	}
 }

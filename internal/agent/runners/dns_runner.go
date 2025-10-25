@@ -19,9 +19,9 @@ func NewDNSRunner() *DNSRunner {
 }
 
 func (r *DNSRunner) Execute(ctx context.Context, target string, options map[string]interface{}) (map[string]interface{}, error) {
-	recordType := getDNSType(options)
-	server := getDNSServer(options)
-	timeout := getTimeout(options, r.timeout)
+	recordType := getStringOption(options, "record_type", "A")
+	server := getStringOption(options, "server", "8.8.8.8:53")
+	timeout := getDurationOption(options, "timeout", r.timeout)
 
 	client := &dns.Client{
 		Timeout: timeout,
@@ -51,6 +51,7 @@ func (r *DNSRunner) Execute(ctx context.Context, target string, options map[stri
 		"answer_count":     len(response.Answer),
 		"authority_count":  len(response.Ns),
 		"additional_count": len(response.Extra),
+		"record_type":      recordType,
 	}
 
 	if len(response.Answer) > 0 {
@@ -60,27 +61,6 @@ func (r *DNSRunner) Execute(ctx context.Context, target string, options map[stri
 	}
 
 	return result, nil
-}
-
-func getDNSType(options map[string]interface{}) string {
-	if recordType, ok := options["record_type"].(string); ok {
-		return recordType
-	}
-	return "A" // default
-}
-
-func getDNSServer(options map[string]interface{}) string {
-	if server, ok := options["server"].(string); ok && server != "" {
-		return server
-	}
-	return "8.8.8.8:53" // Google DNS по умолчанию
-}
-
-func getTimeout(options map[string]interface{}, defaultTimeout time.Duration) time.Duration {
-	if timeout, ok := options["timeout"].(float64); ok {
-		return time.Duration(timeout) * time.Second
-	}
-	return defaultTimeout
 }
 
 func recordTypeToDNSType(recordType string) uint16 {
@@ -97,6 +77,12 @@ func recordTypeToDNSType(recordType string) uint16 {
 		return dns.TypeTXT
 	case "CNAME":
 		return dns.TypeCNAME
+	case "SOA":
+		return dns.TypeSOA
+	case "PTR":
+		return dns.TypePTR
+	case "SRV":
+		return dns.TypeSRV
 	default:
 		return dns.TypeA
 	}
