@@ -47,7 +47,7 @@ A solution that will make checking "Why a website isn't loading" a snap.
 ## 📁 Project Structure
 
 ```
-soundtube/
+project/
 ├── cmd/
 │   ├── agent/              # Entry point of agent part
 │   │   └── tests/
