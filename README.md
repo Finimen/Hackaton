@@ -147,5 +147,5 @@ project/
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/Finimen/Soundtube/blob/main/License.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/Finimen/Hackaton/blob/main/License.md) file for details.
 
