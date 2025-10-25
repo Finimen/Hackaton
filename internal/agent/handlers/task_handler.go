@@ -4,6 +4,7 @@ import (
 	"NetScan/internal/agent/domain"
 	runner "NetScan/internal/agent/runners"
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 )
@@ -21,6 +22,25 @@ func NewTaskHandler(runnerFactory *runner.Factory, logger *slog.Logger) *TaskHan
 }
 
 func (t *TaskHandler) ExecuteTask(ctx context.Context, task *domain.Task) *domain.Result {
+	if task == nil {
+		return domain.NewErrorResult("", "", fmt.Errorf("task is nil"))
+	}
+
+	if task.ID == "" {
+		return domain.NewErrorResult("", task.AgentID, fmt.Errorf("task ID is empty"))
+	}
+	if task.Type == "" {
+		return domain.NewErrorResult(task.ID, task.AgentID, fmt.Errorf("task type is empty"))
+	}
+	if task.Target == "" {
+		return domain.NewErrorResult(task.ID, task.AgentID, fmt.Errorf("task target is empty"))
+	}
+
+	t.logger.Debug("Getting runner for task",
+		"task_id", task.ID,
+		"type", task.Type,
+	)
+
 	runner, err := t.runnerFactory.GetRunner(task.Type)
 	if err != nil {
 		return domain.NewErrorResult(task.ID, task.AgentID, err)

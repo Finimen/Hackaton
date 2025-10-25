@@ -33,11 +33,40 @@ func NewRedisQueue(cfg *config.RedisConfig, log *slog.Logger) (Queue, error) {
 
 // Добавляем элемент в очередь
 func (r *redisQueue) PushTask(ctx context.Context, queueName string, task interface{}) error {
-	data, err := json.Marshal(task)
-	if err != nil {
-		return fmt.Errorf("failed to marshal the task: %w", err)
+	var data []byte
+	var err error
+
+	switch v := task.(type) {
+	case []byte:
+		// Если уже получили []byte, используем как есть
+		data = v
+		slog.Debug("Pushing raw bytes to Redis",
+			"queue", queueName,
+			"data", string(v),
+			"length", len(v),
+		)
+	case string:
+		// Если строка, конвертируем в []byte
+		data = []byte(v)
+		slog.Debug("Pushing string to Redis",
+			"queue", queueName,
+			"data", v,
+			"length", len(v),
+		)
+	default:
+		// Для других типов маршалим в JSON
+		data, err = json.Marshal(task)
+		if err != nil {
+			return fmt.Errorf("failed to marshal the task: %w", err)
+		}
+		slog.Debug("Pushing object to Redis",
+			"queue", queueName,
+			"data", string(data),
+			"length", len(data),
+		)
 	}
 
+	// ВАЖНО: передаем как []byte, чтобы Redis не разбирал структуру
 	return r.client.LPush(ctx, queueName, data).Err()
 }
 

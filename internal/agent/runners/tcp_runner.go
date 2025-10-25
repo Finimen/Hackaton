@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -12,6 +13,7 @@ type TCPRunner struct {
 }
 
 func NewTCPRunner() *TCPRunner {
+	fmt.Printf("🔧 DEBUG: Creating TCPRunner")
 	return &TCPRunner{
 		timeout: 10 * time.Second,
 	}

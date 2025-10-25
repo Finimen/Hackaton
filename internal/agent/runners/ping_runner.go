@@ -12,6 +12,7 @@ type PingRunner struct {
 }
 
 func NewPingRunner() *PingRunner {
+	fmt.Printf("🔧 DEBUG: Creating PingRunner")
 	return &PingRunner{
 		timeout: 10 * time.Second,
 	}

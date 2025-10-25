@@ -12,7 +12,6 @@ import (
 
 	client "NetScan/internal/agent/clients"
 	"NetScan/internal/agent/domain"
-	handler "NetScan/internal/agent/handlers"
 )
 
 var (
@@ -24,20 +23,23 @@ var (
 
 func main() {
 	shutdownCtx, cancelFunc = context.WithCancel(context.Background())
-	defer cancelFunc()
+	// УБРАНО: defer cancelFunc() - это вызывало immediate shutdown
 
 	setupSignalHandling()
 
 	if err := run(); err != nil {
 		logger.Error("Failed to start agent", "error", err)
+		cancelFunc()
 		os.Exit(1)
 	}
 
-	logger.Info("Agent is running, waiting for shutdown signal...")
-
+	// Ждем сигнал завершения
+	logger.Info("Main: Waiting for shutdown signal...")
 	<-shutdownCtx.Done()
 
+	// Теперь останавливаем
 	stop()
+	cancelFunc()
 }
 
 func run() error {
@@ -59,7 +61,7 @@ func run() error {
 
 	// Registration of the agent
 	baseURL := getEnv("BACKEND_URL", "http://localhost:8080")
-	apiClient := client.NewAPIClient(baseURL, "", "")
+	apiClient := container.APIClient
 
 	logger.Info("Registering agent", "name", agent.Name, "location", agent.Location)
 
@@ -69,17 +71,14 @@ func run() error {
 
 	logger.Info("Agent registered successfully", "agent_id", apiClient.GetAgentID())
 
-	taskHandler := handler.NewTaskHandler(container.Factory, logger)
-
-	agentHandler := handler.NewAgentHandler(logger, apiClient, taskHandler)
-
+	// ИСПРАВЛЕНИЕ: используем handler'ы из контейнера
 	wg.Add(3)
 
 	// Main loop of tasks processing
 	go func() {
 		defer wg.Done()
 		logger.Info("Starting task processing loop")
-		agentHandler.Run(shutdownCtx)
+		container.AgentHandler.Run(shutdownCtx) // <- используем из контейнера
 		logger.Info("Task processing loop stopped")
 	}()
 
@@ -104,14 +103,16 @@ func run() error {
 		"backend", baseURL,
 	)
 
+	<-shutdownCtx.Done()
+	logger.Info("Run: Shutdown signal received")
+
 	return nil
 }
 
 func stop() {
 	logger.Info("Shutting down agent service...")
 
-	cancelFunc()
-
+	// Уже отменяем в main, поэтому здесь только ждем завершения горутин
 	done := make(chan struct{})
 	go func() {
 		wg.Wait()

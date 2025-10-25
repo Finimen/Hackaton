@@ -4,6 +4,7 @@ import (
 	"NetScan/internal/backend/models"
 	"NetScan/internal/backend/storage"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -90,7 +91,6 @@ func (s *QueueService) GetNextTask(ctx context.Context, agentID string) (*models
 		return nil, fmt.Errorf("agent is not online: %s", agentID)
 	}
 
-	// Получаем задачу из очереди
 	taskData, err := s.queue.PopTask(ctx, "check_tasks", s.timeout)
 	if err != nil {
 		s.logger.Error("failed to pop task from queue",
@@ -102,19 +102,71 @@ func (s *QueueService) GetNextTask(ctx context.Context, agentID string) (*models
 
 	if taskData == nil {
 		s.logger.Debug("no tasks available in queue", "agent_id", agentID)
-		return nil, nil // Нет задач в очереди - это нормально
+		return nil, nil
 	}
 
-	// Парсим задачу
+	s.logger.Debug("Raw task data from Redis",
+		"raw_data", string(taskData),
+		"agent_id", agentID,
+	)
+
+	// ИСПРАВЛЕНИЕ: Декодируем base64 из JSON строки
+	var taskJson []byte
+
+	// Данные приходят как: "\"eyJjaGVja...\""
+	rawString := string(taskData)
+
+	// Проверяем если это JSON строка с кавычками
+	if len(rawString) >= 2 && rawString[0] == '"' && rawString[len(rawString)-1] == '"' {
+		// Убираем внешние кавычки
+		base64String := rawString[1 : len(rawString)-1]
+
+		s.logger.Debug("Decoding base64 string",
+			"base64_string", base64String,
+			"agent_id", agentID,
+		)
+
+		// Декодируем base64
+		decoded, err := base64.StdEncoding.DecodeString(base64String)
+		if err != nil {
+			s.logger.Error("Failed to decode base64 task data",
+				"error", err,
+				"agent_id", agentID,
+				"base64_string", base64String,
+			)
+			return nil, fmt.Errorf("failed to decode base64 task: %w", err)
+		}
+
+		taskJson = decoded
+		s.logger.Info("Successfully decoded base64 task data",
+			"agent_id", agentID,
+			"decoded_data", string(taskJson),
+		)
+	} else {
+		// Если не в кавычках, используем как есть
+		taskJson = taskData
+		s.logger.Debug("Using raw task data (not base64 encoded)",
+			"agent_id", agentID,
+		)
+	}
+
+	// Парсим задачу из JSON
 	var task models.CheckTask
-	if err := json.Unmarshal(taskData, &task); err != nil {
+	if err := json.Unmarshal(taskJson, &task); err != nil {
 		s.logger.Error("failed to unmarshal task data",
 			"error", err,
 			"agent_id", agentID,
-			"task_data", string(taskData),
+			"task_data", string(taskJson),
 		)
 		return nil, fmt.Errorf("failed to unmarshal task: %w", err)
 	}
+
+	s.logger.Info("Task successfully parsed",
+		"agent_id", agentID,
+		"check_id", task.CheckID,
+		"type", task.Type,
+		"target", task.Target,
+	)
 
 	// Проверяем существование проверки
 	check, err := s.checkStore.GetByID(ctx, task.CheckID)

@@ -15,7 +15,6 @@ type Container struct {
 	APIClient    *client.APIClient
 	TaskRunner   *runner.Factory
 	TaskHandler  *handler.TaskHandler
-	Factory      *runner.Factory
 }
 
 func GetContainer() *Container {
@@ -64,17 +63,8 @@ func (c *Container) initTaskRunners() {
 }
 
 func (c *Container) initHandlers() {
-	c.TaskHandler = handler.NewTaskHandler(c.Factory, c.Logger)
+	c.TaskHandler = handler.NewTaskHandler(c.TaskRunner, c.Logger)
 	c.AgentHandler = handler.NewAgentHandler(c.Logger, c.APIClient, c.TaskHandler)
-}
-
-func (c *Container) initTaskRunner() {
-	httpRunner := runner.NewHTTPRunner()
-	pingRunner := runner.NewPingRunner()
-	dnsRunner := runner.NewDNSRunner()
-	tcpRunner := runner.NewTCPRunner()
-
-	c.Factory = runner.NewFactory(httpRunner, pingRunner, dnsRunner, tcpRunner)
 }
 
 func initAgentMetadata() (domain.AgentMetadata, error) {

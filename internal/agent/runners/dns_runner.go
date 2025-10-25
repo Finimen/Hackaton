@@ -13,6 +13,7 @@ type DNSRunner struct {
 }
 
 func NewDNSRunner() *DNSRunner {
+	fmt.Printf("🔧 DEBUG: Creating DNSRunner")
 	return &DNSRunner{
 		timeout: time.Second * 10,
 	}

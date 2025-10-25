@@ -15,6 +15,7 @@ type HTTPRunner struct {
 }
 
 func NewHTTPRunner() *HTTPRunner {
+	fmt.Printf("🔧 DEBUG: Creating HTTPRunner")
 	return &HTTPRunner{
 		client: &http.Client{
 			Timeout: 30 * time.Second,

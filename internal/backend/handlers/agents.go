@@ -26,7 +26,6 @@ func (h *Handlers) RegisterAgent(c *gin.Context) {
 	c.JSON(http.StatusCreated, SuccessResponse("agent_registered", gin.H{
 		"agent_id": agent.ID,
 		"token":    token,
-		"agent":    agent,
 	}))
 }
 

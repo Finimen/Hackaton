@@ -138,6 +138,12 @@ func (s *CheckService) CreateCheck(ctx context.Context, checkType models.CheckTy
 		return nil, fmt.Errorf("failed to marshal task: %w", err)
 	}
 
+	s.logger.Debug("Task data before pushing to queue",
+		"check_id", check.ID,
+		"task_data", string(taskData),
+		"data_type", fmt.Sprintf("%T", taskData),
+	)
+
 	// Добавляем задачу в очередь (каждый агент будет брать свою копию)
 	successfulPushes := 0
 	for i := range agents {
