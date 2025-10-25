@@ -24,16 +24,23 @@ var (
 
 func main() {
 	shutdownCtx, cancelFunc = context.WithCancel(context.Background())
-	defer cancelFunc()
+	// УБРАНО: defer cancelFunc() - это вызывало immediate shutdown
 
 	setupSignalHandling()
 
 	if err := run(); err != nil {
 		logger.Error("Failed to start agent", "error", err)
+		cancelFunc()
 		os.Exit(1)
 	}
 
+	// Ждем сигнал завершения
+	logger.Info("Main: Waiting for shutdown signal...")
+	<-shutdownCtx.Done()
+
+	// Теперь останавливаем
 	stop()
+	cancelFunc()
 }
 
 func run() error {
@@ -100,14 +107,18 @@ func run() error {
 		"backend", baseURL,
 	)
 
+	// ВАЖНО: НЕ завершаем функцию сразу!
+	// Ждем здесь, пока не придет сигнал завершения
+	<-shutdownCtx.Done()
+	logger.Info("Run: Shutdown signal received")
+
 	return nil
 }
 
 func stop() {
 	logger.Info("Shutting down agent service...")
 
-	cancelFunc()
-
+	// Уже отменяем в main, поэтому здесь только ждем завершения горутин
 	done := make(chan struct{})
 	go func() {
 		wg.Wait()

@@ -38,20 +38,21 @@ func (s *AgentHandler) Run(ctx context.Context) {
 			task, err := s.api.FetchTask(ctx)
 			if err != nil {
 				if errors.Is(err, client.ErrNoTasks) {
-					s.logger.Info("no tasks")
+					s.logger.Info("No tasks available")
 					time.Sleep(IDLE_DELAY)
 					continue
 				}
 
-				s.logger.Error("Failed", err)
+				// ПРАВИЛЬНОЕ ЛОГИРОВАНИЕ ОШИБКИ:
+				s.logger.Error("Failed to fetch task", "error", err)
 				time.Sleep(ERROR_DELAY)
 				continue
 			}
 
-			result := s.runner.ExecuteTask(ctx, task)
+			result := s.runner.ExecuteTask(ctx, task) // ← Тут блять ошибка!
 
-			if err := s.api.SubmitResult(context.Background(), result); err != nil {
-				s.logger.Error("Failed to sumbit", "error", err)
+			if err := s.api.SubmitResult(ctx, result); err != nil { // ← Тут ебани!
+				s.logger.Error("Failed to submit result", "error", err)
 			}
 		}
 	}
