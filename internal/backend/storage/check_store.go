@@ -108,3 +108,20 @@ func (s *checkStore) List(ctx context.Context, limit, offset int) ([]*models.Che
 	return checks, nil
 
 }
+
+// возвращает количество проверок по статусу
+func (s *checkStore) GetCountByStatus(ctx context.Context, status models.CheckStatus) (int, error) {
+	query := `
+		SELECT COUNT(*) 
+		FROM checks 
+		WHERE status = $1
+	`
+
+	var count int
+	err := s.pool.QueryRow(ctx, query, status).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get check count by status %s: %w", status, err)
+	}
+
+	return count, nil
+}

@@ -56,3 +56,21 @@ CREATE TRIGGER update_checks_updated_at BEFORE UPDATE ON checks
 
 CREATE TRIGGER update_agents_updated_at BEFORE UPDATE ON agents
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Таблица для отслеживания взятых задач (для cleanup)
+CREATE TABLE IF NOT EXISTS agent_tasks (
+                                           id UUID PRIMARY KEY,
+                                           agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+    check_id UUID NOT NULL REFERENCES checks(id) ON DELETE CASCADE,
+    task_data JSONB NOT NULL,
+    taken_at TIMESTAMP NOT NULL,
+    status VARCHAR(20) DEFAULT 'processing',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE(agent_id, check_id)
+    );
+
+-- Индексы для оптимизации
+CREATE INDEX IF NOT EXISTS idx_agent_tasks_taken_at ON agent_tasks(taken_at);
+CREATE INDEX IF NOT EXISTS idx_agent_tasks_status ON agent_tasks(status);
+CREATE INDEX IF NOT EXISTS idx_agent_tasks_agent_id ON agent_tasks(agent_id);
