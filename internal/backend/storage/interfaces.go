@@ -12,6 +12,7 @@ type CheckStore interface {
 	GetByID(ctx context.Context, id string) (*models.Check, error)
 	UpdateStatus(ctx context.Context, id string, status models.CheckStatus) error
 	List(ctx context.Context, limit, offset int) ([]*models.Check, error)
+	GetCountByStatus(ctx context.Context, status models.CheckStatus) (int, error)
 }
 
 // AgentStore интерфейс для работы с агентами
@@ -21,6 +22,7 @@ type AgentStore interface {
 	GetByID(ctx context.Context, id string) (*models.Agent, error)
 	UpdateHeartbeat(ctx context.Context, agentID string) error
 	UpdateStatus(ctx context.Context, agentID string, status models.AgentStatus) error
+	UpdateCapabilities(ctx context.Context, agentID string, capabilities []string) error
 	ListOnline(ctx context.Context) ([]*models.Agent, error)
 }
 
@@ -40,4 +42,12 @@ type Queue interface {
 	GetQueueLength(ctx context.Context, queueName string) (int64, error)
 	Publish(ctx context.Context, channel string, message interface{}) error
 	Close() error
+}
+
+// AgentTasksStore интерфейс для работы с тасками
+type AgentTasksStore interface {
+	CreateTask(ctx context.Context, task *models.AgentTask) error
+	GetStuckTasks(ctx context.Context, timeout time.Duration) ([]*models.AgentTask, error)
+	DeleteTask(ctx context.Context, agentID, checkID string) error
+	DeleteTasksByAgent(ctx context.Context, agentID string) error
 }

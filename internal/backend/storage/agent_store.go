@@ -205,3 +205,23 @@ func (s *agentStore) ListOnline(ctx context.Context) ([]*models.Agent, error) {
 
 	return agents, nil
 }
+
+// обновляет возможности агента
+func (s *agentStore) UpdateCapabilities(ctx context.Context, agentID string, capabilities []string) error {
+	query := `
+		UPDATE agents 
+		SET capabilities = $1, updated_at = $2
+		WHERE id = $3
+	`
+
+	result, err := s.pool.Exec(ctx, query, capabilities, time.Now(), agentID)
+	if err != nil {
+		return fmt.Errorf("failed to update agent capabilities: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("agent not found with id %s", agentID)
+	}
+
+	return nil
+}
