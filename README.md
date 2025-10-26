@@ -13,7 +13,7 @@ A solution that will make checking "Why a website isn't loading" a snap.
 ### The Eliminaters
 #### **Сапсай К.В.** - 📧 finimensniper@gmail.com
 - Created the agent features (core) part of the project
-#### **Печерикин Д.Д** - pecherikindanielman@mail.ru
+#### **Печерикин Д.Д** - frishstrike@mail.ru
 - Created the backend part of the project
 #### **Карпенко Д.В. - Yahooilla@yandex.ru
 - Created the frontend part of the project
